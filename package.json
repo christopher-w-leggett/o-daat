@@ -1,0 +1,27 @@
+{
+  "name": "o-daat",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/main/index.js",
+  "repository": "https://github.com/christopher-w-leggett/o-daat",
+  "author": "Christopher Leggett",
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "axios": "^0.18.0"
+  },
+  "scripts": {
+    "start": "mkdir -p 'temp/run'; sam local start-api -t template.yaml & PID=`echo $!`; echo \"${PID}\" > temp/run/sam.pid",
+    "stop": "if [ -f 'temp/run/sam.pid' ]; then PID=`cat temp/run/sam.pid`; if [[ '' != \"${PID}\" ]]; then kill \"${PID}\"; echo '' > temp/run/sam.pid; fi fi",
+    "test": "mocha --use_strict src/test/"
+  },
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "mocha": "^5.1.1",
+    "del": "^3.0.0",
+    "gulp": "^3.9.1",
+    "gulp-zip": "^4.1.0",
+    "gulp-install": "^1.1.0",
+    "stream-sink": "^2.2.2"
+  }
+}
