@@ -6,17 +6,14 @@ const sink = require('stream-sink');
 
 const BUILD_DIR = 'temp/build';
 const PACKAGE_NAME = 'o-daat.zip';
+const PACKAGE_FILES = ['package.json', 'package-lock.json', 'src/main/**'];
 
 gulp.task('clean', () => {
-    console.log('start clean');
-    return del([
-        'temp/build'
-    ]);
+    return del([BUILD_DIR]);
 });
 
 gulp.task('build', ['clean'], () => {
-    console.log('start build');
-    return gulp.src(['package.json', 'package-lock.json', 'src/main/**'])
+    return gulp.src(PACKAGE_FILES)
         .pipe(gulp.dest(BUILD_DIR))
         .pipe(install({
             npm: '--only=production'
@@ -25,8 +22,23 @@ gulp.task('build', ['clean'], () => {
 });
 
 gulp.task('package', ['build'], () => {
-    console.log('start package');
     return gulp.src([BUILD_DIR + '/**', '!' + BUILD_DIR + '/' + PACKAGE_NAME])
         .pipe(zip(PACKAGE_NAME))
         .pipe(gulp.dest(BUILD_DIR));
+});
+
+gulp.task('watch', () => {
+    let watchTimeout = null,
+        watchBuildRunning = false,
+        watcher = gulp.watch(PACKAGE_FILES, (event) => {
+            if (!watchTimeout || watchBuildRunning) {
+                watchTimeout = setTimeout(() => {
+                    watchBuildRunning = true;
+                    gulp.start('package', () => {
+                        watchTimeout = null;
+                        watchBuildRunning = false;
+                    });
+                }, 2000);
+            }
+        });
 });
