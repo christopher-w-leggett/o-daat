@@ -62,6 +62,33 @@ gulp.task('upload', ['package'], () => {
     return uploadCmd;
 });
 
+gulp.task('deploy', ['upload'], () => {
+    //ensure required properties
+    if (!properties['stack-name'] || !properties['stack-name'].match(/^[a-zA-Z0-9\-]+$/)) {
+        console.error(
+            'A valid stack-name must be defined to deploy.  ' +
+                'Please configure the "stack-name" property in "' + PROPERTIES_FILE + '".'
+        );
+        return;
+    }
+
+    //construct deploy command
+    let deployCmdString = 'sam deploy --template-file ' + BUILD_DIR + '/template.yaml --stack-name ' +
+        properties['stack-name'] + ' --capabilities CAPABILITY_IAM';
+    if (properties.profile && properties.profile.match(/^[a-zA-Z0-9\-]+$/)) {
+        deployCmdString += ' --profile ' + properties.profile;
+    }
+
+    //execute command
+    let deployCmd = exec(deployCmdString);
+    deployCmd.then((value) => {
+        console.log(value.stdout);
+    }).catch((error) => {
+        //do nothing
+    });
+    return deployCmd;
+});
+
 gulp.task('watch', () => {
     let watchTimeout = null,
         watchBuildRunning = false,
@@ -121,7 +148,6 @@ Deployment Steps:
     - Ensure all deployment requirements have been met.
     - Ensure target S3 bucket is created (e.g. aws s3 mb s3://<bucket> --profile <profile>).  This is required to deploy the lambda package.
     - Create new lambda package using `gulp package`.
-    - Package and upload the SAM application using `sam package --template-file template.yaml --output-template-file temp/build/template.yaml --s3-bucket <bucket> --profile <profile>` or `aws cloudformation package --template-file template.yaml --output-template-file temp/build/template.yaml --s3-bucket <bucket> --profile <profile>`.
-    - Deploy SAM application using `sam deploy --template-file temp/build/template.yaml --stack-name o-daat-stack --capabilities CAPABILITY_IAM --profile <profile>` or `aws cloudformation deploy --template-file temp/build/template.yaml --stack-name o-daat-stack --capabilities CAPABILITY_IAM --profile <profile>`.
-    - TODO: Additional details for deployment (e.g. Other AWS resources, access policies, etc.).
+    - Package and upload the SAM application using `gulp upload`.
+    - Deploy SAM application using `gulp deploy`.
 */
