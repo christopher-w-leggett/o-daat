@@ -1,0 +1,4 @@
+{
+    "s3-bucket": <bucket-name>,
+    "profile": <aws-cli-profile>
+}

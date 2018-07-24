@@ -4,5 +4,6 @@
 # Node
 node_modules
 
-# Temp
+# Project Specific Ignore
 temp
+properties/*.json
