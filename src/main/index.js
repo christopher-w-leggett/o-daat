@@ -3,7 +3,7 @@
 const axios = require('axios')
 const url = 'http://checkip.amazonaws.com/';
 
-exports.helloWorld = async (event, context, callback) => {
+module.exports.helloWorld = async (event, context, callback) => {
     try {
         const ret = await axios(url);
         return {
@@ -14,7 +14,7 @@ exports.helloWorld = async (event, context, callback) => {
             })
         };
     } catch (err) {
-        console.log(err);
+        console.error(err);
         throw err;
     }
 };

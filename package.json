@@ -22,6 +22,7 @@
     "gulp": "^3.9.1",
     "gulp-zip": "^4.1.0",
     "gulp-install": "^1.1.0",
-    "stream-sink": "^2.2.2"
+    "stream-sink": "^2.2.2",
+    "inquirer": "^6.0.0"
   }
 }

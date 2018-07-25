@@ -6,4 +6,4 @@ node_modules
 
 # Project Specific Ignore
 temp
-properties/*.json
+gulp/properties-*.json

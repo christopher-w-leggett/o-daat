@@ -1,3 +1,5 @@
+'use strict'
+
 //load dependencies
 const del = require('del');
 const gulp = require('gulp');
@@ -6,10 +8,7 @@ const install = require('gulp-install');
 const sink = require('stream-sink');
 const util = require('util');
 const exec = util.promisify(require('child_process').exec);
-
-//load properties
-const PROPERTIES_FILE = './properties/' + (process.env.PROPERTIES_FILE || 'local') + '.json';
-const properties = require(PROPERTIES_FILE);
+const properties = require('./gulp/properties.js');
 
 //set constants
 const BUILD_DIR = 'temp/build';
@@ -35,54 +34,44 @@ gulp.task('package', ['build'], () => {
         .pipe(gulp.dest(BUILD_DIR));
 });
 
-gulp.task('upload', ['package'], () => {
-    //ensure required properties
-    if (!properties['s3-bucket'] || !properties['s3-bucket'].match(/^[a-z0-9\.\-]+$/)) {
-        console.error(
-            'A valid s3-bucket must be defined to upload the lambda package.  ' +
-                'Please configure the "s3-bucket" property in "' + PROPERTIES_FILE + '".'
-        );
-        return;
-    }
+gulp.task('upload', ['package'], async () => {
+    //read properties
+    const s3Bucket = await properties.read('s3-bucket', true);
+    const profile = await properties.read('profile', true);
 
     //construct upload command
     let uploadCmdString = 'sam package --template-file template.yaml --output-template-file ' +
-        BUILD_DIR + '/template.yaml --s3-bucket ' + properties['s3-bucket'];
-    if (properties.profile && properties.profile.match(/^[a-zA-Z0-9\-]+$/)) {
-        uploadCmdString += ' --profile ' + properties.profile;
+        BUILD_DIR + '/template.yaml --s3-bucket ' + s3Bucket;
+    if (profile) {
+        uploadCmdString += ' --profile ' + profile;
     }
 
     //execute command
     let uploadCmd = exec(uploadCmdString);
     uploadCmd.then((value) => {
-        console.log(value.stdout);
+        console.info(value.stdout);
     }).catch((error) => {
         //do nothing
     });
     return uploadCmd;
 });
 
-gulp.task('deploy', ['upload'], () => {
+gulp.task('deploy', ['upload'], async () => {
     //ensure required properties
-    if (!properties['stack-name'] || !properties['stack-name'].match(/^[a-zA-Z0-9\-]+$/)) {
-        console.error(
-            'A valid stack-name must be defined to deploy.  ' +
-                'Please configure the "stack-name" property in "' + PROPERTIES_FILE + '".'
-        );
-        return;
-    }
+    const stackName = await properties.read('stack-name', true);
+    const profile = await properties.read('profile', true);
 
     //construct deploy command
     let deployCmdString = 'sam deploy --template-file ' + BUILD_DIR + '/template.yaml --stack-name ' +
-        properties['stack-name'] + ' --capabilities CAPABILITY_IAM';
-    if (properties.profile && properties.profile.match(/^[a-zA-Z0-9\-]+$/)) {
-        deployCmdString += ' --profile ' + properties.profile;
+        stackName + ' --capabilities CAPABILITY_IAM';
+    if (profile) {
+        deployCmdString += ' --profile ' + profile;
     }
 
     //execute command
     let deployCmd = exec(deployCmdString);
     deployCmd.then((value) => {
-        console.log(value.stdout);
+        console.info(value.stdout);
     }).catch((error) => {
         //do nothing
     });
